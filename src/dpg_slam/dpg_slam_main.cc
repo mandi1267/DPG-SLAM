@@ -33,8 +33,8 @@
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
-//#include "amrl_msgs/Localization2DMsg.h"
-//#include "amrl_msgs/VisualizationMsg.h"
+#include "amrl_msgs/Localization2DMsg.h"
+#include "amrl_msgs/VisualizationMsg.h"
 #include "gflags/gflags.h"
 #include "geometry_msgs/PoseArray.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
@@ -63,7 +63,6 @@
 //#include "shared/math/line2d.h"
 //#include "shared/util/timer.h"
 
-//#include "slam.h"
 //#include "vector_map/vector_map.h"
 //#include "visualization/visualization.h"
 

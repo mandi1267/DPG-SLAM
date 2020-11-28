@@ -52,4 +52,5 @@ namespace dpg_slam {
     class PoseGraphParameters {
 
     };
+
 }

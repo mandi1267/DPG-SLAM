@@ -87,4 +87,52 @@ namespace dpg_slam {
          */
         Measurement measurement_;
     };
+
+   class DpgEdge{
+   
+   public:
+   DpgEdge(const DpgNode &startNode, const DpgNode &endNode):
+	   startNode_(startNode),
+	   endNode_(endNode){
+		   computeCovariance(startNode, endNode);
+	   }
+   
+   private:
+	
+  	/**
+	 * Start Node of the edge 
+	 */
+	DpgNode startNode_;
+	
+	/**
+	 * endNode of the edge
+	 */
+	DpgNode endNode_;
+
+	/**
+	 * covariance matrix for spatial transformation from startPose to endPose
+	 */
+	Eigen::Matrix3f covariance_;
+
+	/**
+	 * This method should compute the covariance matrix given the startNode and endNode
+	 * TODO:: might need access to more input arguments, add as needed.
+	 */
+	void computeCovariance(const DpgNode &startNode, const DpgNode &endNode){
+	
+	//TODO::Fill in to compute covariance matrix from startNode to endNode
+	covariance_ = Eigen::MatrixXf::Zero(3,3);
+	};
+
+   };
+   
+   /**
+    * This data structure defines the Dpg Pose Graph <N, E>
+    * where N is the set of DpgNodes and E is the set of all constraints 
+    * between the nodes.
+    */
+   struct dpgGraph{
+	std::vector<DpgNode> nodes_;
+	std::vector<DpgEdge> edges_;
+   };
 }
