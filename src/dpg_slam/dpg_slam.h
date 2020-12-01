@@ -16,8 +16,64 @@
 #include <pcl/point_cloud.h>
 #include <amrl_msgs/VisualizationMsg.h>
 
-namespace dpg_slam {
+struct pair_hash {
+    template <class T1, class T2>
+    std::size_t operator () (const std::pair<T1,T2> &p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
 
+        // Mainly for demonstration purposes, i.e. works but is overly simple
+        // In the real world, use sth. like boost.hash_combine
+        return h1 ^ h2;  
+    }
+};
+
+namespace dpg_slam {
+    
+    /**
+     * Data structure to define the occupancy grid.
+     */
+    class occupancyGrid {
+    public:
+       
+	occupancyGrid(const std::vector<DpgNode> &Nodes):
+		Nodes_(Nodes){
+		calculateOccupancyGrid();
+		}
+
+	bool isCellOccupied(const DpgNode& node){
+		
+		//TODO: Fill in - Bharath
+		
+		return false;
+	}
+    private:
+
+	/*
+	 * To fill in the occupancy grid based on input node vectors 
+	 */
+	void calculateOccupancyGrid();
+	
+	/*
+	 * Nodes for which the occupancy grid is to be made.
+	 */
+	std::vector<DpgNode> Nodes_;
+
+	/*
+	 * Mapping from keys based on cell location in map to the boolean representing of there is a map point in the grid or not.
+	 */
+ 	std::unordered_map<std::pair<int, int>, bool, pair_hash> gridInfo;
+    };
+
+    /**
+     * Data structure to define a map point in the active and dynamic maps.
+     */
+    struct dpgMapPoint{
+
+    	Eigen::Vector2f mapPoint;
+ 	PointLabel label;
+    };
+    
     class DpgSLAM {
     public:
 
@@ -49,6 +105,15 @@ namespace dpg_slam {
 
         // Get latest map.
         std::vector<Eigen::Vector2f> GetMap();
+	
+	/**
+	 * Get latest active map 
+	 */
+	std::vector<dpgMapPoint> GetActiveMap();
+
+	// Get latest dynamic map
+	std::vector<dpgMapPoint> GetDynamicMap();
+
 
         // Get latest robot pose.
         void GetPose(Eigen::Vector2f* loc, float* angle) const;
@@ -83,6 +148,11 @@ namespace dpg_slam {
          * Color to use when visualizing the odometry.
          */
         const uint32_t kOdometryEstColor = 0x3400b;
+
+	/**
+	 * number of latest nodes to be taken from current pose chain for getting the local submap.
+	 */
+	const uint32_t kMaxCurrNodesForLocalSubmap_ = 10;
 
         /**
          * List of nodes forming the trajectory.
@@ -270,5 +340,41 @@ namespace dpg_slam {
          * second entry as estimated covariance.
          */
         std::pair<std::pair<Eigen::Vector2f, float>, Eigen::MatrixXd> runIcp(DpgNode &node_1, DpgNode &node_2);
+    
+     	/*
+	 * computes the local submapGrid and the currGrid
+	 * each map is an unordered map from keys in x,y to boolean which says if the grid is occupied or not (int, int)->bool
+	 * TODO: Need to figure out the data structure for occupancy grids/
+	 */
+	std::vector<occupancyGrid> computeLocalSubMap();
+         
+	/**
+	 * This method compares each cell in the currGrid to the corresponding cell is the submap.
+	 * @param currGrid 		occupancy grid of current pose chain obtained from computeLocalSubmap
+	 * @param submapGrid		occupancy grid of local submap obtained from computeLocalSubmap
+	 *
+	 * @return Vector of dynamic map points with associated labels for measurements in current Grid
+	 */
+	std::vector<dpgMapPoint> detectAndLabelChanges(const occupancyGrid& currGrid, const occupancyGrid& submapGrid);
+
+	/**
+	 * @param removedPoints 	Points from the dynamic map points obtained from detectAndLabelChanges that
+	 * 				are labelled as "REMOVED".
+	 *
+	 * @return vector of inactive nodes.
+	 */
+	std::vector<DpgNode> updateActiveAndDynamicMaps(const std::vector<DpgNode> &nodes, const std::vector<dpgMapPoint> &removedPoints);
+
+	/**
+	 * Method to delete inactive nodes from dpg graph
+	 * NOTE: This is not a top priority.
+	 */
+	void reduceDPGSize();
+	
+    	/**
+	 * Main execution Loop for DPG
+	 */
+	void updateDPG();	
+    
     };
 }  // end dpg_slam
